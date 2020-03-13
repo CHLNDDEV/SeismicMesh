@@ -1,10 +1,10 @@
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Copyright (C) 2020 Keith Roberts
 
 #  Distributed under the terms of the GNU General Public License. You should
 #  have received a copy of the license along with this program. If not,
 #  see <http://www.gnu.org/licenses/>.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 import sys
 import io
 
@@ -13,6 +13,7 @@ from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
 
 import distmesh as dm
+
 
 class MeshGenerator:
     """
@@ -40,10 +41,8 @@ class MeshGenerator:
     msh = MeshSizeFunction(ef,fd)
 
     """
-    def __init__(
-            self,SizingFunction,
-            method='DistMesh'
-            ):
+
+    def __init__(self, SizingFunction, method="DistMesh"):
         self.SizingFunction = SizingFunction
         self.method = method
 
@@ -53,7 +52,7 @@ class MeshGenerator:
         return self.__SizingFunction
 
     @SizingFunction.setter
-    def SizingFunction(self,value):
+    def SizingFunction(self, value):
         self.__SizingFunction = value
 
     @property
@@ -61,7 +60,7 @@ class MeshGenerator:
         return self.__method
 
     @method.setter
-    def method(self,value):
+    def method(self, value):
         self.__method = value
 
     # PUBLIC METHODS
@@ -72,4 +71,3 @@ class MeshGenerator:
             print("Using the DistMesh method to generate mesh...")
 
         return 0
-

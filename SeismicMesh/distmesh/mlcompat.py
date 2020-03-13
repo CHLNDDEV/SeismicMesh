@@ -9,16 +9,17 @@ setdiff_rows   : Similar to setdiff(..., 'rows')
 """
 
 __all__ = [
-    'dense',
-    'interp2_linear',
-    'interp3_linear',
-    'setdiff_rows',
-    'unique_rows',
-    ]
+    "dense",
+    "interp2_linear",
+    "interp3_linear",
+    "setdiff_rows",
+    "unique_rows",
+]
 
 import numpy as np
 import scipy.sparse as spsparse
 import scipy.interpolate as spinterp
+
 
 def dense(I, J, S, shape=None, dtype=None):
     """
@@ -42,10 +43,13 @@ def dense(I, J, S, shape=None, dtype=None):
         S.fill(x)
 
     # Turn these into 1-d arrays for processing.
-    S = S.flat; I = I.flat; J = J.flat
+    S = S.flat
+    I = I.flat
+    J = J.flat
     return spsparse.coo_matrix((S, (I, J)), shape, dtype).toarray()
 
-def interp2_linear(x,y,z,xi,yi):
+
+def interp2_linear(x, y, z, xi, yi):
     """
     Similar to interp2(..., '*linear') in MATLAB.
 
@@ -65,9 +69,10 @@ def interp2_linear(x,y,z,xi,yi):
     -------
     zi : array, shape (n,)
     """
-    return spinterp.RectBivariateSpline(x,y,z,kx=1,ky=1).ev(xi,yi)
+    return spinterp.RectBivariateSpline(x, y, z, kx=1, ky=1).ev(xi, yi)
 
-def interp3_linear(x,y,z, w, xi,yi,zi):
+
+def interp3_linear(x, y, z, w, xi, yi, zi):
     """Similar to interpn(..., '*linear') in MATLAB for dim=3"""
     p = np.vstack((x.flat, y.flat, z.flat)).T
     v = w.flaten()
@@ -75,6 +80,7 @@ def interp3_linear(x,y,z, w, xi,yi,zi):
 
     pi = np.vstack((xi.flat, yi.flat, zi.flat)).T
     return f(pi)
+
 
 def setdiff_rows(A, B, return_index=False):
     """
@@ -84,29 +90,30 @@ def setdiff_rows(A, B, return_index=False):
 
     Returns I if return_index is True.
     """
-    A = np.require(A, requirements='C')
-    B = np.require(B, requirements='C')
+    A = np.require(A, requirements="C")
+    B = np.require(B, requirements="C")
 
     assert A.ndim == 2, "array must be 2-dim'l"
     assert B.ndim == 2, "array must be 2-dim'l"
-    assert A.shape[1] == B.shape[1], \
-           "arrays must have the same number of columns"
-    assert A.dtype == B.dtype, \
-           "arrays must have the same data type"
+    assert A.shape[1] == B.shape[1], "arrays must have the same number of columns"
+    assert A.dtype == B.dtype, "arrays must have the same data type"
 
     # NumPy provides setdiff1d, which operates only on one dimensional
     # arrays. To make the array one-dimensional, we interpret each row
     # as being a string of characters of the appropriate length.
     orig_dtype = A.dtype
     ncolumns = A.shape[1]
-    dtype = np.dtype((np.character, orig_dtype.itemsize*ncolumns))
-    C = np.setdiff1d(A.view(dtype), B.view(dtype)) \
-        .view(A.dtype) \
-        .reshape((-1, ncolumns), order='C')
+    dtype = np.dtype((np.character, orig_dtype.itemsize * ncolumns))
+    C = (
+        np.setdiff1d(A.view(dtype), B.view(dtype))
+        .view(A.dtype)
+        .reshape((-1, ncolumns), order="C")
+    )
     if return_index:
         raise NotImplementedError
     else:
         return C
+
 
 def unique_rows(A, return_index=False, return_inverse=False):
     """
@@ -117,27 +124,24 @@ def unique_rows(A, return_index=False, return_inverse=False):
     Returns I if return_index is True
     Returns J if return_inverse is True
     """
-    A = np.require(A, requirements='C')
+    A = np.require(A, requirements="C")
     assert A.ndim == 2, "array must be 2-dim'l"
 
     orig_dtype = A.dtype
     ncolumns = A.shape[1]
-    dtype = np.dtype((np.character, orig_dtype.itemsize*ncolumns))
-    B, I, J = np.unique(A.view(dtype),
-                        return_index=True,
-                        return_inverse=True)
+    dtype = np.dtype((np.character, orig_dtype.itemsize * ncolumns))
+    B, I, J = np.unique(A.view(dtype), return_index=True, return_inverse=True)
 
-    B = B.view(orig_dtype).reshape((-1, ncolumns), order='C')
+    B = B.view(orig_dtype).reshape((-1, ncolumns), order="C")
 
     # There must be a better way to do this:
-    if (return_index):
-        if (return_inverse):
+    if return_index:
+        if return_inverse:
             return B, I, J
         else:
             return B, I
     else:
-        if (return_inverse):
+        if return_inverse:
             return B, J
         else:
             return B
-
