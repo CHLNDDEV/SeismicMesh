@@ -19,7 +19,7 @@ jobs:
       # The tests
       - run:
           command: pytest --cov SeismicMesh
-          working_directory: test/
+          working_directory: ~/
           environment:
             MPLBACKEND: Agg
       # submit to codecov
