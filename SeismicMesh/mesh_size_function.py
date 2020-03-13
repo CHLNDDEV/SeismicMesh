@@ -11,11 +11,8 @@ import io
 from scipy.interpolate import RegularGridInterpolator
 import numpy as np
 import matplotlib.pyplot as plt
+
 import segyio
-import distmesh as dm  # for signed distnace function
-
-import FastHJ
-
 
 class MeshSizeFunction:
     """
@@ -48,7 +45,8 @@ class MeshSizeFunction:
 
     Example
     ------
-    ef = MeshSizeFunction(
+    import SeismicMesh
+    ef = SeismicMesh.MeshSizeFunction(
             bbox=(-12e3,0,0,67e3),
             ,segy=fname,
             hmin=2e3
@@ -214,7 +212,7 @@ class MeshSizeFunction:
 
          Returns
         -------
-            MeshSizeFunction object with specific fields populated:
+            SeismicMesh.MeshSizeFunction object with specific fields populated:
                 self.fh: lambda function w/ scipy.inerpolate.RegularGridInterpolater representing isotropic mesh sizes in domain
                 self.fd: lambda function representing the signed distance function of domain
 
@@ -261,7 +259,7 @@ class MeshSizeFunction:
             hh_m = np.reshape(tmp, _nz, _nx, 'F')
         # adjust based on the CFL limit so cr < cr_max
         if(_dt > 0):
-            print('Enforcing timestep of '+str(dt)+' seconds...')
+            print('Enforcing timestep of '+str(_dt)+' seconds...')
             cr_old = (_vp*_dt)/hh_m
             dxn = (_vp*_dt)/_cr_max
             hh_m = np.where(cr_old > _cr_max, dxn, hh_m)
@@ -273,7 +271,7 @@ class MeshSizeFunction:
         # create a mesh size function interpolant
         self.fh = lambda p: interpolant(p)
         # create a signed distance function
-        self.fd = lambda p: dm.drectangle(p,bbox[0],bbox[1],bbox[2],bbox[3])
+        self.fd = lambda p: self.drectangle(p,bbox[0],bbox[1],bbox[2],bbox[3])
         return self
 
 
@@ -287,7 +285,7 @@ class MeshSizeFunction:
 
         Parameters
         -------
-            self: MeshSizeFunction object
+            self: SeismicMesh.MeshSizeFunction object
                         **kwargs
             stride: downsample the image by n (n=5 by default)
 
@@ -321,15 +319,23 @@ class MeshSizeFunction:
 
 
     ### PRIVATE METHODS ###
+    def __drectangle(p,x1,x2,y1,y2):
+        """Signed distance function for rectangle with corners (x1,y1), (x2,y1),
+        (x1,y2), (x2,y2).
+        This has an incorrect distance to the four corners. See drectangle0 for a
+        true distance function.
+        """
+        return -min(min(min(-y1+p[:,1],y2-p[:,1]),-x1+p[:,0]),x2-p[:,0])
+
+
     def __ReadVelocityModel(self):
-        """ uses the python package segyio."""
+        """ Reads a velocity model from segY. Uses the python package segyio."""
         _fname=self.segy
         _bbox=self.bbox
 
         width=max(_bbox)
         depth=min(_bbox)
 
-        found=False
         with segyio.open(_fname, ignore_geometry = True) as f:
             found=True
             # determine length of velocity model from file
@@ -341,9 +347,6 @@ class MeshSizeFunction:
                 vp[:, index]=trace  # convert to m-s?
                 index += 1
             vp=np.flipud(vp)
-        if not found:
-            print('Exiting...segy file called '+_fname+'not found...')
-            sys.exit(1)
         return vp, nz, nx
 
     def __CreateDomainVectors(self):
