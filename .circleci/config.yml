@@ -15,9 +15,7 @@ jobs:
     steps:
       - run: 
           command: pwd 
-      - run: 
-          command: ls 
-      - run: pip3 install -r ./requirements.txt
+      - run: pip3 install -r ~/SeismicMesh/requirements.txt
       - run: pip3 install -U pytest pytest-cov --user
       - checkout
       - run:
