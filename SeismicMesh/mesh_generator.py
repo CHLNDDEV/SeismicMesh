@@ -5,14 +5,6 @@
 #  have received a copy of the license along with this program. If not,
 #  see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
-import sys
-import io
-
-import numpy as np
-from scipy.interpolate import RegularGridInterpolator
-import matplotlib.pyplot as plt
-
-import distmesh as dm
 
 
 class MeshGenerator:

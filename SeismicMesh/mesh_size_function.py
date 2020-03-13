@@ -5,14 +5,13 @@
 #  have received a copy of the license along with this program. If not,
 #  see <http://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
-import sys
-import io
-
 from scipy.interpolate import RegularGridInterpolator
 import numpy as np
 import matplotlib.pyplot as plt
 
 import segyio
+
+from SeismicMesh import gradient_limiter
 
 
 class MeshSizeFunction:
@@ -225,6 +224,7 @@ class MeshSizeFunction:
 
         """
         _bbox = self.bbox
+        width = max(_bbox)
         _vp, _nz, _nx = self.__ReadVelocityModel()
 
         self.vp = _vp
@@ -240,9 +240,6 @@ class MeshSizeFunction:
 
         _dt = self.dt
         _cr_max = self.cr_max
-
-        width = max(_bbox)
-        depth = min(_bbox)
 
         hh_m = np.zeros(shape=(_nz, _nx)) + _hmin
         if _wl > 0:
@@ -260,13 +257,7 @@ class MeshSizeFunction:
         # grade the mesh sizes
         if _grade > 0:
             print("Enforcing mesh gradation...")
-            elen = width / _nx
-            imax = 10000
-            ffun = hh_m.flatten("F")
-            ffun_list = ffun.tolist()
-            tmp = FastHJ.limgrad([_nz, _nx, 1], elen, _grade, imax, ffun_list)
-            tmp = np.asarray(tmp)
-            hh_m = np.reshape(tmp, _nz, _nx, "F")
+            hh_m = gradient_limiter.hj(hh_m, width / _nx, _grade, 10000)
         # adjust based on the CFL limit so cr < cr_max
         if _dt > 0:
             print("Enforcing timestep of " + str(_dt) + " seconds...")
@@ -280,7 +271,7 @@ class MeshSizeFunction:
         # create a mesh size function interpolant
         self.fh = lambda p: interpolant(p)
         # create a signed distance function
-        self.fd = lambda p: self.drectangle(p, bbox[0], bbox[1], bbox[2], bbox[3])
+        self.fd = lambda p: self.drectangle(p, _bbox[0], _bbox[1], _bbox[2], _bbox[3])
         return self
 
     def plot(self, stride=5):
@@ -301,13 +292,7 @@ class MeshSizeFunction:
         -------
             none
             """
-        _nz = self.nz
-        _nx = self.nx
-        _bbox = self.bbox
-        width = max(_bbox)
-        depth = min(_bbox)
         fh = self.fh
-
         zg, xg = self.__CreateDomainMatrices()
         sz1z, sz1x = zg.shape
         sz2 = sz1z * sz1x
@@ -336,13 +321,7 @@ class MeshSizeFunction:
     def __ReadVelocityModel(self):
         """ Reads a velocity model from segY. Uses the python package segyio."""
         _fname = self.segy
-        _bbox = self.bbox
-
-        width = max(_bbox)
-        depth = min(_bbox)
-
         with segyio.open(_fname, ignore_geometry=True) as f:
-            found = True
             # determine length of velocity model from file
             nz = len(f.samples)
             nx = len(f.trace)
@@ -365,11 +344,6 @@ class MeshSizeFunction:
         return zvec, xvec
 
     def __CreateDomainMatrices(self):
-        _bbox = self.bbox
-        _nx = self.nx
-        _nz = self.nz
-        width = max(_bbox)
-        depth = min(_bbox)
         zvec, xvec = self.__CreateDomainVectors()
         zg, xg = np.meshgrid(zvec, xvec, indexing="ij")
         return zg, xg
