@@ -10,12 +10,13 @@ jobs:
       - run: black --check .
       - run: flake8 .
   build:
+    working_directory: ~/work
     docker:
       - image: circleci/python:3
     steps:
       - run: 
           command: pwd 
-      - run: pip3 install -r ~/SeismicMesh/requirements.txt
+      - run: pip3 install -r ~/requirements.txt
       - run: pip3 install -U pytest pytest-cov --user
       - checkout
       - run:
