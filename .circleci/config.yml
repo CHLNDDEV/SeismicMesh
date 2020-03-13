@@ -14,17 +14,12 @@ jobs:
     docker:
       - image: circleci/python:3
     steps:
+      - pip3 install -r requirements.txt
       - run: pip3 install -U pytest pytest-cov --user
       - checkout
       # The tests
       - run:
           command: pytest --cov SeismicMesh
-          working_directory: ~/
-          environment:
-            MPLBACKEND: Agg
-      # submit to codecov
-      - run: bash <(curl -s https://codecov.io/bash)
-
 workflows:
   version: 2
   lint_and_build:
