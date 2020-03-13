@@ -17,7 +17,7 @@ jobs:
       - run: 
           command: pwd 
       - checkout
-      - run: pip3 install -r requirements.txt
+      - run: pip3 install .[all] --user
       - run: pip3 install -U pytest pytest-cov --user
       - checkout
       - run:
