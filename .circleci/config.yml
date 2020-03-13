@@ -16,6 +16,7 @@ jobs:
     steps:
       - run: 
           command: pwd 
+      - checkout
       - run: pip3 install -r requirements.txt
       - run: pip3 install -U pytest pytest-cov --user
       - checkout
