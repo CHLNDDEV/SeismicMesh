@@ -14,8 +14,6 @@ jobs:
     docker:
       - image: circleci/python:3
     steps:
-      - run: 
-          command: pwd 
       - checkout
       - run: pip3 install .[all] --user
       - run: pip3 install -U pytest pytest-cov --user
