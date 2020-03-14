@@ -21,7 +21,7 @@ setup(
     download_url="https://github.com/nschloe/SeismicMesh/releases",
     license=about["__license__"],
     platforms="any",
-    install_requires=["numpy", "segyio"],
+    install_requires=["numpy", "segyio", "scipy"],
     extras_require={"all": ["matplotlib"], "plot": ["matplotlib"]},
     classifiers=[
         about["__status__"],
