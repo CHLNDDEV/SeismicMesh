@@ -84,8 +84,25 @@ class MeshSizeFunction:
         self.nx = None
         self.fh = None
         self.fd = None
+        self.hh = None
 
     # SETTERS AND GETTERS
+    @property
+    def hh(self):
+        fh = self.fh
+        zg, xg = self.__CreateDomainMatrices()
+        sz1z, sz1x = zg.shape
+        sz2 = sz1z * sz1x
+        _zg = np.reshape(zg, (sz2, 1))
+        _xg = np.reshape(xg, (sz2, 1))
+        hh = fh((_zg, _xg))
+        hh = np.reshape(hh, (sz1z, sz1x))
+        return self.__hh
+
+    @hh.setter
+    def hh(self,value):
+        self.__hh = value
+
     @property
     def fh(self):
         return self.__fh
@@ -201,7 +218,7 @@ class MeshSizeFunction:
     def grade(self, value):
         self.__grade = value
 
-    ### PUBLIC METHODS ###
+    #---PUBLIC METHODS---#
 
     def build(self):
         """Builds the isotropic mesh size function according
@@ -249,6 +266,7 @@ class MeshSizeFunction:
                 + " vertices..."
             )
             hh_m = _vp / (_freq * _wl)
+        print(hh_m.max(),hh_m.min())
         # enforce min (and optionally max) sizes
         hh_m = np.where(hh_m < _hmin, _hmin, hh_m)
         if _hmax < np.inf:
@@ -292,15 +310,9 @@ class MeshSizeFunction:
         -------
             none
             """
-        fh = self.fh
-        zg, xg = self.__CreateDomainMatrices()
-        sz1z, sz1x = zg.shape
-        sz2 = sz1z * sz1x
-        _zg = np.reshape(zg, (sz2, 1))
-        _xg = np.reshape(xg, (sz2, 1))
-        hh_m = fh((_zg, _xg))
-        hh_m = np.reshape(hh_m, (sz1z, sz1x))
-        plt.pcolormesh(xg[0::stride], zg[0::stride], hh_m[0::stride], edgecolors="none")
+        zg,xg=self.__CreateDomainMatrices
+        hh = self.hh
+        plt.pcolormesh(xg[0::stride], zg[0::stride], hh[0::stride], edgecolors="none")
         plt.title("Isotropic mesh sizes")
         plt.colorbar(label="mesh size (m)")
         plt.xlabel("x-direction (km)")
@@ -309,7 +321,7 @@ class MeshSizeFunction:
         plt.show()
         return None
 
-    ### PRIVATE METHODS ###
+    #---PRIVATE METHODS---#
     def __drectangle(p, x1, x2, y1, y2):
         """Signed distance function for rectangle with corners (x1,y1), (x2,y1),
         (x1,y2), (x2,y2).
