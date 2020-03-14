@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 
 import segyio
 
-from SeismicMesh import gradient_limiter
-
+from SeismicMesh import FastHJ
 
 class MeshSizeFunction:
     """
@@ -258,7 +257,7 @@ class MeshSizeFunction:
         # grade the mesh sizes
         if _grade > 0:
             print("Enforcing mesh gradation...")
-            hh_m = gradient_limiter.hj(hh_m, width / _nx, _grade, 10000)
+            hh_m = self.__hj(hh_m, width / _nx, _grade, 10000)
         # adjust based on the CFL limit so cr < cr_max
         if _dt > 0:
             print("Enforcing timestep of " + str(_dt) + " seconds...")
@@ -316,6 +315,17 @@ class MeshSizeFunction:
         return zg, xg
 
     # ---PRIVATE METHODS---#
+
+    def hj(fun, elen, grade, imax):
+        """ A wrapper to call the cpp gradient limiter code """
+        # TODO ADD CHECKS HERE
+        _nz, _nx = np.shape(fun)
+        ffun = fun.flatten("F")
+        ffun_list = ffun.tolist()
+        tmp = FastHJ.limgrad([_nz, _nx, 1], elen, grade, imax, ffun_list)
+        tmp = np.asarray(tmp)
+        fun_s = np.reshape(tmp, (_nz, _nx), "F")
+        return fun_s
 
     def __drectangle(p, x1, x2, y1, y2):
         """Signed distance function for rectangle with corners (x1,y1), (x2,y1),
