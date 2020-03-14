@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 
 import segyio
 
-from SeismicMesh import FastHJ
+#import FastHJ
+
 
 class MeshSizeFunction:
     """
@@ -318,6 +319,7 @@ class MeshSizeFunction:
 
     def hj(fun, elen, grade, imax):
         """ A wrapper to call the cpp gradient limiter code """
+        import FastHJ
         # TODO ADD CHECKS HERE
         _nz, _nx = np.shape(fun)
         ffun = fun.flatten("F")
